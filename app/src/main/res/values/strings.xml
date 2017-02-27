@@ -9,7 +9,6 @@
     <string name="new_age">Enter new age</string>
     <string name="new_breed">Enter new breed</string>
     <string-array name="items">
-        <item>by id</item>
         <item>by name</item>
         <item>by age</item>
         <item>by breed</item>

@@ -30,6 +30,10 @@
             android:name=".AddActivity"
             android:label="AddNewCat">
         </activity>
+        <activity
+            android:name=".SearchActivity"
+            android:label="SearchCat">
+        </activity>
     </application>
 
 </manifest>

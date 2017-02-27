@@ -1,66 +1,102 @@
 package com.catandroidfirebaseapp;
 
 import android.content.Intent;
-import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
-import android.support.v7.widget.Toolbar;
-import android.util.Log;
-import android.view.Menu;
-import android.view.MenuItem;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageButton;
 import android.widget.ImageView;
+import android.widget.Spinner;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.catandroidfirebaseapp.model.Cat;
 import com.firebase.ui.database.FirebaseRecyclerAdapter;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
+import com.google.firebase.database.Query;
 import com.google.firebase.storage.FirebaseStorage;
-import com.google.firebase.storage.StorageReference;
 import com.squareup.picasso.Picasso;
 
+/**
+ * Created by mac on 27.02.17.
+ */
 
-public class MainActivity extends AppCompatActivity {
+public class SearchActivity extends AppCompatActivity {
 
+    private Spinner spinner;
     private RecyclerView mRecyclerView;
+    private Button btnSearch;
+    private EditText edtSearch;
+
     private DatabaseReference mDb;
+    private Query qSearch;
     private FirebaseAuth auth;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_main);
-
-        Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
-        setSupportActionBar(toolbar);
-
-        auth = FirebaseAuth.getInstance();
-
-        if (auth.getCurrentUser() == null) {
-            startActivity(new Intent(MainActivity.this, LoginActivity.class));
-            finish();
-        }
+        setContentView(R.layout.activity_search);
 
         mRecyclerView = (RecyclerView) findViewById(R.id.recycler_view);
         mRecyclerView.setLayoutManager(new LinearLayoutManager(this));
 
-        mDb = FirebaseDatabase.getInstance().getReference().child("Cats");
+        spinner = (Spinner) findViewById(R.id.spinner);
+        btnSearch = (Button) findViewById(R.id.btnSearch);
+        edtSearch = (EditText) findViewById(R.id.edtSearch);
 
+        auth = FirebaseAuth.getInstance();
+
+        if (auth.getCurrentUser() == null) {
+            startActivity(new Intent(SearchActivity.this, LoginActivity.class));
+            finish();
+        }
+
+        mDb = FirebaseDatabase.getInstance().getReference().child("Cats");
+        qSearch = mDb;
+
+        btnSearch.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+
+                String data = edtSearch.getText().toString();
+
+                if(!data.equals("")) {
+                    switch ((int) spinner.getSelectedItemId()) {
+                        case 0:
+                            SetAdapter(qSearch = mDb.orderByChild("name").equalTo(data));
+                            break;
+                        case 1:
+                            try {
+                                SetAdapter(mDb.orderByChild("age").equalTo(Long.valueOf(data)));
+                            }catch (NumberFormatException e){
+                                Toast.makeText(SearchActivity.this, "Age must be numerical", Toast.LENGTH_SHORT).show();
+                            }
+                            break;
+                        case 2:
+                            SetAdapter(qSearch = mDb.orderByChild("breed").equalTo(data));
+                            break;
+                    }
+                }
+                else Toast.makeText(SearchActivity.this, "Please fill search field", Toast.LENGTH_SHORT).show();
+            }
+        });
     }
 
-    @Override
     protected void onStart() {
         super.onStart();
 
-        FirebaseRecyclerAdapter<Cat, PostViewHolder> fbAdapter = new FirebaseRecyclerAdapter<Cat, PostViewHolder>(Cat.class, R.layout.recycler_view, PostViewHolder.class, mDb) {
+    }
+
+    private void SetAdapter(Query qSearch){
+        FirebaseRecyclerAdapter<Cat, MainActivity.PostViewHolder> fbAdapter = new FirebaseRecyclerAdapter<Cat, MainActivity.PostViewHolder>(Cat.class, R.layout.recycler_view, MainActivity.PostViewHolder.class, qSearch) {
             @Override
-            protected void populateViewHolder(final PostViewHolder viewHolder, final Cat model, final int position) {
+            protected void populateViewHolder(final MainActivity.PostViewHolder viewHolder, final Cat model, final int position) {
                 viewHolder.setName(model.getName());
                 viewHolder.setAge(model.getAge());
                 viewHolder.setBreed(model.getBreed());
@@ -84,36 +120,6 @@ public class MainActivity extends AppCompatActivity {
             }
         };
         mRecyclerView.setAdapter(fbAdapter);
-    }
-
-    @Override
-    public boolean onCreateOptionsMenu(Menu menu) {
-        // Inflate the menu; this adds items to the action bar if it is present.
-        getMenuInflater().inflate(R.menu.menu_main, menu);
-        return true;
-    }
-
-    @Override
-    public boolean onOptionsItemSelected(MenuItem item) {
-        Intent intent;
-        switch (item.getItemId()) {
-            case R.id.action_add:
-                intent = new Intent(this, AddActivity.class);
-                startActivityForResult(intent, 0);
-                return true;
-
-
-            case R.id.action_search:
-                intent = new Intent(this, SearchActivity.class);
-                startActivity(intent);
-                return true;
-
-            default:
-
-                return super.onOptionsItemSelected(item);
-
-        }
-
     }
 
     public static class PostViewHolder extends RecyclerView.ViewHolder{
