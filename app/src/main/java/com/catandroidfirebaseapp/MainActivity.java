@@ -154,6 +154,11 @@ public class MainActivity extends AppCompatActivity {
             btnEdit.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
+
+                    pEditName.setText("");
+                    pEditAge.setText("");
+                    pEditBreed.setText("");
+
                     pEditName.setVisibility((pEditName.getVisibility() == View.VISIBLE)
                             ? View.GONE : View.VISIBLE);
 
